@@ -112,3 +112,5 @@ Desktop.ini
 *.sublime-workspace
 *.sublime-project
 *.code-workspace
+
+results/
