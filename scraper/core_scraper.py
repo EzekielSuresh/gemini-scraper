@@ -9,13 +9,16 @@ from google.genai import types
 def fetch_page(url):
     page = PlayWrightFetcher.fetch(url)
     main_text = page.css_first('body')
-    # If you want the full HTML, use page.html
+    # If you want the full HTML, use page
     return main_text if main_text else page
 
-def build_prompt(page_html):
+def build_prompt(page_html, url):
     prompt = (
         "You are an expert web scraper. "
         "Given the following HTML, extract the information as described.\n\n"
+        "Identify and return website URLs from the HTML that will lead to submenus or subcategories for deep scraping.\n"
+        f"Only include website URLs that matches {url}[path]. Return the list of website URLs with the key 'website_urls'.\n\n"
+        "Return the extracted information and the list of website URLs in JSON format.\n\n"
         f"HTML:\n{page_html}\n\n"
     )
     return prompt
@@ -23,7 +26,7 @@ def build_prompt(page_html):
 def run_gemini_scraper(url, instruction):
     # Fetch and prepare HTML
     page_html = fetch_page(url)
-    prompt = build_prompt(page_html)
+    prompt = build_prompt(page_html, url)
 
     client = genai.Client(
         api_key="AIzaSyD1ORIS7_VMOdd10bZswlHvRsMMrOF310U"
