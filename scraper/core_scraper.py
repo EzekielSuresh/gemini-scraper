@@ -1,10 +1,17 @@
-# gemini_scraper.py
-
 from scrapling.fetchers import PlayWrightFetcher
 import os
-import datetime
 from google import genai
 from google.genai import types
+from utils import get_url_title, parse_scraped_data, get_sub_urls, save_scraped_data
+
+class ScrapedPage:
+    def __init__(self, url, title, sub_urls=None, content=None, scraped_at=None):
+        self.url = url
+        self.title = title
+        self.sub_urls = sub_urls or []
+        self.content = content
+        self.scraped_at = scraped_at
+        
 
 def fetch_page(url):
     page = PlayWrightFetcher.fetch(url)
@@ -23,7 +30,21 @@ def build_prompt(page_html, url):
     )
     return prompt
 
-def run_gemini_scraper(url, instruction):
+def save_result(data, title):
+    #TODO: Add filename safety check (Remove forbidden characters) 
+    folder = os.path.join("results", {title})
+    filename = f"{title}.json"
+    filepath = os.path.join(folder, filename)
+    save_scraped_data(data, filepath)
+
+#TODO: Implement log file system
+def update_logs():
+    return
+
+def run_gemini_scraper(url):
+    title = get_url_title(url)
+    #Create ScrapedPage object
+    page = ScrapedPage(url, title)
     # Fetch and prepare HTML
     page_html = fetch_page(url)
     prompt = build_prompt(page_html, url)
@@ -37,29 +58,13 @@ def run_gemini_scraper(url, instruction):
         config=types.GenerateContentConfig(
             system_instruction=f"{prompt}"
         ),
-        contents=f"{instruction}"
+        #TODO: Set hard-coded instruction for every scraping process
+        contents=f"Get all meaningful content from this page"
     )
     
-    print(response.text)
-
-def save_result(data):
-    if not os.path.exists("results"):
-        os.makedirs("results")
-        
-    timestamp = datetime.datetime.now().strftime("%d/%m/%Y_%H:%M:%S")
-    url_slug = url.replace("https://", "").replace("http://", "").replace("/", "_").replace("?", "_")
-    filename = f"{timestamp}_{url_slug}.txt"
-    filepath = os.path.join("results", filename)
-    
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(data) 
-    print(f"Result saved to {filepath}")
-    update_logs()
-
-def update_logs():
-    return
-
-if __name__ == "__main__":
-    url = input("Enter the URL to scrape: ").strip()
-    instruction = input("Describe what you want to extract: ").strip()
-    run_gemini_scraper(url, instruction)
+    #print(response.text)
+    parsed_response = parse_scraped_data(response.text)
+    sub_urls = get_sub_urls(parsed_response)
+    page.content = parsed_response
+    page.sub_urls = sub_urls
+    save_result(parsed_response, page.title)
