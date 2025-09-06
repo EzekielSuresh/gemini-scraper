@@ -1,6 +1,8 @@
 from urllib import urlparse
 import re
 import json
+from pathlib import Path
+import os
 
 #TODO: get sub_urls
 #TODO: parse and save result (page content)
@@ -26,3 +28,8 @@ def parse_scraped_data(data):
     parsed = data[start:end+1]
     parsed_dict = json.load(parsed)
     return parsed_dict
+
+def save_scraped_data(data, path):
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
