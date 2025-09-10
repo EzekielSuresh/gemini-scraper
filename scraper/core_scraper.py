@@ -2,7 +2,7 @@ from scrapling.fetchers import PlayWrightFetcher
 import os
 from google import genai
 from google.genai import types
-from utils import get_url_title, parse_scraped_data, get_sub_urls, save_scraped_data
+from .utils import get_url_title, parse_scraped_data, get_sub_urls, save_scraped_data
 
 class ScrapedPage:
     def __init__(self, url, title, sub_urls=None, content=None, scraped_at=None):
@@ -19,20 +19,19 @@ def fetch_page(url):
     # If you want the full HTML, use page
     return main_text if main_text else page
 
-def build_prompt(page_html, url):
+def build_prompt(page_html):
     prompt = (
         "You are an expert web scraper. "
         "Given the following HTML, extract the information as described.\n\n"
         "Identify and return website URLs from the HTML that will lead to submenus or subcategories for deep scraping.\n"
-        f"Only include website URLs that matches {url}[path]. Return the list of website URLs with the key 'website_urls'.\n\n"
-        "Return the extracted information and the list of website URLs in JSON format.\n\n"
+        "Return the extracted information and the list of website URLs ('website_urls') in JSON format.\n\n"
         f"HTML:\n{page_html}\n\n"
     )
     return prompt
 
 def save_result(data, title):
     #TODO: Add filename safety check (Remove forbidden characters) 
-    folder = os.path.join("results", {title})
+    folder = os.path.join("results", f"{title}")
     filename = f"{title}.json"
     filepath = os.path.join(folder, filename)
     save_scraped_data(data, filepath)
@@ -47,7 +46,7 @@ def run_gemini_scraper(url):
     page = ScrapedPage(url, title)
     # Fetch and prepare HTML
     page_html = fetch_page(url)
-    prompt = build_prompt(page_html, url)
+    prompt = build_prompt(page_html)
 
     client = genai.Client(
         api_key="AIzaSyD1ORIS7_VMOdd10bZswlHvRsMMrOF310U"
@@ -68,3 +67,4 @@ def run_gemini_scraper(url):
     page.content = parsed_response
     page.sub_urls = sub_urls
     save_result(parsed_response, page.title)
+    return page
