@@ -1,4 +1,4 @@
-from urllib import urlparse
+from urllib.parse import urlparse
 import re
 import json
 from pathlib import Path
@@ -26,10 +26,15 @@ def parse_scraped_data(data):
         # No valid JSON found
         return None
     parsed = data[start:end+1]
-    parsed_dict = json.load(parsed)
+    parsed_dict = json.loads(parsed)
     return parsed_dict
 
 def save_scraped_data(data, path):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+        
+def filter_sub_urls(sub_urls, base_url, limit=10):
+    filtered = [url for url in sub_urls if url.startswith(base_url)]
+    print(filtered[:limit])
+    return filtered[:limit]
