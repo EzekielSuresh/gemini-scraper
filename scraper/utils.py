@@ -36,7 +36,7 @@ def save_scraped_data(data, path):
         
 def filter_sub_urls(sub_urls, base_url, limit=10):
     filtered = [url for url in sub_urls if url.startswith(base_url)]
-    print(filtered[:limit])
+    #print(filtered[:limit])
     return filtered[:limit]
 
 def setup_logger(log_path='logs/scraper.log'):
@@ -59,4 +59,5 @@ def setup_logger(log_path='logs/scraper.log'):
     # Add handler
     logger.addHandler(fh)
     logger.addHandler(sh)
+    return logger
     
