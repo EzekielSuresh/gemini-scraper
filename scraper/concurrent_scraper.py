@@ -28,11 +28,13 @@ def save_result(data, title, sub_url_title):
     filepath = os.path.join(folder, filename)
     save_scraped_data(data, filepath)
 
-def run_concurrent_scraper(url, title):
+def run_concurrent_scraper(url, title, logger=None):
     sub_url_title = get_url_title(url)
     #Create ScrapedPage object
     #page = ScrapedPage(url, title)
     # Fetch and prepare HTML
+    if logger:
+        logger.info(f"Scraping {url}")
     page_html = fetch_page(url)
     prompt = build_prompt(page_html)
 
@@ -56,15 +58,18 @@ def run_concurrent_scraper(url, title):
     #page.sub_urls = sub_urls
     save_result(parsed_response, title, sub_url_title)
     
-def scrap_suburls(sub_urls, title, max_workers=4):
+def scrap_suburls(sub_urls, title, max_workers=4, logger=None):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_url = {
-            executor.submit(run_concurrent_scraper, url, title): url 
+            executor.submit(run_concurrent_scraper, url, title, logger): url 
             for url in sub_urls
         }
         for future in as_completed(future_to_url):
             url = future_to_url[future]
             try:
                 future.result()
+                if logger:
+                    logger.info(f"Successfully scraped {url}")
             except Exception as e:
-                print(f"Error scraping {url}: {e}")
+                if logger:
+                    logger.error(f"Error scraping {url}: {e}")

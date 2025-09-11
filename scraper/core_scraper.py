@@ -29,22 +29,26 @@ def build_prompt(page_html):
     )
     return prompt
 
-def save_result(data, title):
+def save_result(data, title, logger=None):
     #TODO: Add filename safety check (Remove forbidden characters) 
     folder = os.path.join("results", f"{title}")
     filename = f"{title}.json"
     filepath = os.path.join(folder, filename)
     save_scraped_data(data, filepath)
+    if logger:
+        logger.info(f"Saved data to {filepath}")
 
 #TODO: Implement log file system
 def update_logs():
     return
 
-def run_gemini_scraper(url):
+def run_gemini_scraper(url, logger=None):
     title = get_url_title(url)
     #Create ScrapedPage object
     page = ScrapedPage(url, title)
     # Fetch and prepare HTML
+    if logger:
+        logger.info(f"Scraping {url}")
     page_html = fetch_page(url)
     prompt = build_prompt(page_html)
 
@@ -61,10 +65,12 @@ def run_gemini_scraper(url):
         contents=f"Get all meaningful content from this page"
     )
     
+    if logger:
+        logger.info(f"Successfully scraped {url}")
     #print(response.text)
     parsed_response = parse_scraped_data(response.text)
     sub_urls = get_sub_urls(parsed_response)
     page.content = parsed_response
     page.sub_urls = sub_urls
-    save_result(parsed_response, page.title)
+    save_result(parsed_response, page.title, logger)
     return page
