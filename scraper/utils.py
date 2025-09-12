@@ -4,9 +4,6 @@ import json
 from pathlib import Path
 import logging
 
-#TODO: get sub_urls
-#TODO: parse and save result (page content)
-
 def get_url_title(url):
     parsed = urlparse(url)
     path = parsed.path.rstrip('/')
@@ -19,20 +16,31 @@ def get_sub_urls(data):
     sub_urls = data["website_urls"]
     return sub_urls
 
-def parse_scraped_data(data):
+def parse_scraped_data(data, logger=None):
     start = data.find('{')
     end = data.rfind('}')
     if start == -1 or end == -1 or end < start:
         # No valid JSON found
         return None
     parsed = data[start:end+1]
-    parsed_dict = json.loads(parsed)
-    return parsed_dict
+    try:
+        parsed_dict = json.loads(parsed)
+        return parsed_dict
+    except Exception as e:
+        if logger:
+            logger.error(f"Invalid JSON data: {e}")
+        return None
 
-def save_scraped_data(data, path):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+def save_scraped_data(data, path, logger=None):
+    try:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        if logger:
+            logger.info(f"Saved data to {path}")
+    except Exception as e:
+        if logger:
+            logger.error(f"Failed to save data to {path}: {e}")
         
 def filter_sub_urls(sub_urls, base_url, limit=10):
     filtered = [url for url in sub_urls if url.startswith(base_url)]
