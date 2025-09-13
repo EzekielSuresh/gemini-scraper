@@ -3,6 +3,12 @@ import os
 from google import genai
 from google.genai import types
 from .utils import get_url_title, parse_scraped_data, get_sub_urls, save_scraped_data
+from scraper.config import get_config
+
+cfg = get_config()
+model_name = cfg["model_name"]
+api_key = cfg["api_key"]
+output_dir = cfg["output_dir"]
 
 class ScrapedPage:
     def __init__(self, url, title, sub_urls=None, content=None, scraped_at=None):
@@ -41,7 +47,7 @@ def build_prompt(url, page_html):
 
 def save_result(data, title, logger=None):
     #TODO: Add filename safety check (Remove forbidden characters) 
-    folder = os.path.join("results", f"{title}")
+    folder = os.path.join(output_dir, f"{title}")
     filename = f"{title}.json"
     filepath = os.path.join(folder, filename)
     save_scraped_data(data, filepath, logger)
@@ -57,11 +63,11 @@ def run_gemini_scraper(url, logger=None):
     prompt = build_prompt(url, page_html)
 
     client = genai.Client(
-        api_key="AIzaSyD1ORIS7_VMOdd10bZswlHvRsMMrOF310U"
+        api_key=api_key
     )
     
     response = client.models.generate_content(
-        model="gemini-2.5-flash-lite",
+        model=model_name,
         config=types.GenerateContentConfig(
             system_instruction=f"{prompt}"
         ),

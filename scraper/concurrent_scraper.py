@@ -2,8 +2,15 @@ from scrapling.fetchers import PlayWrightFetcher
 import os
 from google import genai
 from google.genai import types
-from .utils import save_scraped_data, get_url_title, parse_scraped_data
+from scraper.utils import save_scraped_data, get_url_title, parse_scraped_data
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from scraper.config import get_config
+
+cfg = get_config()
+model_name = cfg["model_name"]
+api_key = cfg["api_key"]
+max_workers = cfg["max_workers"]
+output_dir = cfg["output_dir"]
 
 def fetch_page(url, logger=None):
     try:
@@ -29,7 +36,7 @@ def build_prompt(page_html):
 
 def save_result(data, title, sub_url_title, logger=None):
     #TODO: Add filename safety check (Remove forbidden characters) 
-    folder = os.path.join("results", f"{title}")
+    folder = os.path.join(output_dir, f"{title}")
     filename = f"{sub_url_title}.json"
     filepath = os.path.join(folder, filename)
     save_scraped_data(data, filepath, logger)
@@ -43,11 +50,11 @@ def run_concurrent_scraper(url, title, logger=None):
     prompt = build_prompt(page_html)
 
     client = genai.Client(
-        api_key="AIzaSyD1ORIS7_VMOdd10bZswlHvRsMMrOF310U"
+        api_key=api_key
     )
     
     response = client.models.generate_content(
-        model="gemini-2.5-flash-lite",
+        model=model_name,
         config=types.GenerateContentConfig(
             system_instruction=f"{prompt}"
         ),
@@ -58,7 +65,7 @@ def run_concurrent_scraper(url, title, logger=None):
     parsed_response = parse_scraped_data(response.text, logger)
     save_result(parsed_response, title, sub_url_title, logger)
     
-def scrap_suburls(sub_urls, title, max_workers=4, logger=None):
+def scrap_suburls(sub_urls, title, max_workers=max_workers, logger=None):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_url = {
             executor.submit(run_concurrent_scraper, url, title, logger): url 
