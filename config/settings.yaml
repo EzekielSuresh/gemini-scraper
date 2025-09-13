@@ -1,0 +1,4 @@
+model_name: "gemini-2.5-flash-lite"
+api_key: "..."
+max_workers: 4
+output_dir: "results"
