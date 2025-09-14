@@ -102,7 +102,7 @@ Example:
 
 ## Contributing
 
-Contributions are welcome! If you have suggestions for improvements, bug fixes or new features, feel free to open an [issue](https://github.com/EzekielSuresh/gemini-scraper).
+Contributions are welcome! If you have suggestions for improvements, bug fixes or new features, feel free to open an [issue](https://github.com/EzekielSuresh/gemini-scraper/issues).
 
 ## License
 
